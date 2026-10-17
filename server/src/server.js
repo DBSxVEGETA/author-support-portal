@@ -1,10 +1,12 @@
 require("dotenv").config();
+
 const http = require("http"),
   { Server } = require("socket.io"),
   jwt = require("jsonwebtoken"),
   app = require("./app"),
   connectDB = require("./config/db"),
   User = require("./models/User");
+
 async function start() {
   await connectDB();
   const server = http.createServer(app);
@@ -15,6 +17,7 @@ async function start() {
       credentials: true,
     },
   });
+
   io.use(async (socket, next) => {
     try {
       const token = socket.handshake.auth?.token;
@@ -28,11 +31,13 @@ async function start() {
       next(new Error("Invalid socket token"));
     }
   });
+
   io.on("connection", (s) => {
     if (s.user.role === "admin") s.join("admins");
     else s.join(`user:${s.user._id}`);
     s.emit("connected", { success: true, userId: String(s.user._id) });
   });
+
   app.set("io", io);
   const port = process.env.PORT || 5000;
   server.listen(port, () =>
@@ -41,6 +46,7 @@ async function start() {
     ),
   );
 }
+
 start().catch((e) => {
   console.error("Server startup failed:", e);
   process.exit(1);

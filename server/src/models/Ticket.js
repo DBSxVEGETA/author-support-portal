@@ -23,6 +23,7 @@ const replySchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
 const schema = new mongoose.Schema(
   {
     ticketNumber: { type: String, unique: true, index: true },
@@ -52,11 +53,13 @@ const schema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
 schema.pre("validate", function (next) {
   if (!this.ticketNumber)
     this.ticketNumber = `BL-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
   next();
 });
+
 schema.index({ status: 1, priority: 1, createdAt: -1 });
 const Ticket = mongoose.model("Ticket", schema);
 Ticket.categories = categories;

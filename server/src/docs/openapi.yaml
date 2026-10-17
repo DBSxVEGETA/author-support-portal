@@ -1,146 +1,424 @@
 openapi: 3.0.3
+
 info:
-  title: Author Support Portal API
+  title: BookLeaf Author Support Portal API
   version: 1.0.0
+  description: REST API for author authentication, book management, support tickets, and admin operations.
+
 servers:
   - url: http://localhost:5000
+    description: Local development server
+
+tags:
+  - name: System
+    description: API health and availability
+  - name: Authentication
+    description: Author and admin authentication
+  - name: Books
+    description: Retrieve book information
+  - name: Tickets
+    description: Create, view, filter, and reply to support tickets
+  - name: Admin - Ticket Management
+    description: Admin ticket queue, classification, assignment, and responses
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
+  parameters:
+    TicketId:
+      name: id
+      in: path
+      required: true
+      description: Ticket ID
+      schema:
+        type: string
+    TicketStatus:
+      name: status
+      in: query
+      required: false
+      description: Filter tickets by status
+      schema:
+        type: string
+        enum:
+          - Open
+          - In Progress
+          - Resolved
+          - Closed
+    TicketCategory:
+      name: category
+      in: query
+      required: false
+      description: Filter tickets by category
+      schema:
+        type: string
+        enum:
+          - Royalty & Payments
+          - ISBN & Metadata Issues
+          - Printing & Quality
+          - Distribution & Availability
+          - Book Status & Production Updates
+          - General Inquiry
+    TicketPriority:
+      name: priority
+      in: query
+      required: false
+      description: Filter tickets by priority
+      schema:
+        type: string
+        enum:
+          - Critical
+          - High
+          - Medium
+          - Low
+
 paths:
   /health:
     get:
+      tags:
+        - System
       summary: Health check
+      description: Check whether the API is running.
       responses:
-        "200": { description: API healthy }
+        "200":
+          description: API is healthy
+
   /api/auth/login:
     post:
+      tags:
+        - Authentication
       summary: Login
-      tags: [Authentication]
+      description: Authenticate using an email and password and receive a JWT.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [email, password]
+              required:
+                - email
+                - password
               properties:
-                email: { type: string, example: priya.sharma@email.com }
-                password: { type: string, example: Author123@ }
+                email:
+                  type: string
+                  format: email
+                  example: priya.sharma@email.com
+                password:
+                  type: string
+                  format: password
+                  example: Author123!
       responses:
-        "200": { description: JWT and user }
-        "401": { description: Invalid credentials }
+        "200":
+          description: Login successful; returns a JWT and user details
+        "400":
+          description: Invalid request data
+        "401":
+          description: Invalid email or password
+
   /api/auth/me:
     get:
-      summary: Current user
-      security: [{ bearerAuth: [] }]
+      tags:
+        - Authentication
+      summary: Get current user
+      description: Return details for the authenticated user.
+      security:
+        - bearerAuth: []
       responses:
-        "200": { description: Current user }
+        "200":
+          description: Current user details
+        "401":
+          description: Authentication required
+
   /api/books:
     get:
-      summary: List books for current user
-      security: [{ bearerAuth: [] }]
+      tags:
+        - Books
+      summary: List books
+      description: Return books belonging to the authenticated author. Admin users can retrieve all books.
+      security:
+        - bearerAuth: []
       responses:
-        "200": { description: Books }
+        "200":
+          description: Books retrieved successfully
+        "401":
+          description: Authentication required
+
+  /api/books/{id}:
+    get:
+      tags:
+        - Books
+      summary: Get a book by ID
+      description: Retrieve one book. Non-admin users can only retrieve their own books.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: MongoDB book document ID
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Book retrieved successfully
+        "401":
+          description: Authentication required
+        "404":
+          description: Book not found
+
   /api/tickets:
     get:
+      tags:
+        - Tickets
       summary: List tickets
-      security: [{ bearerAuth: [] }]
+      description: Authors see their own tickets. Admin users can retrieve all tickets. Results can be filtered by status, category, and priority.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TicketStatus"
+        - $ref: "#/components/parameters/TicketCategory"
+        - $ref: "#/components/parameters/TicketPriority"
       responses:
-        "200": { description: Tickets }
+        "200":
+          description: Tickets retrieved successfully
+        "401":
+          description: Authentication required
+
     post:
+      tags:
+        - Tickets
       summary: Create ticket
-      security: [{ bearerAuth: [] }]
+      description: Create a support ticket for one of the author's books or for a general account-level issue. Category and priority are classified automatically.
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [subject, description]
+              required:
+                - subject
+                - description
               properties:
-                bookId: { type: string }
-                subject: { type: string }
-                description: { type: string }
-                attachmentName: { type: string }
+                bookId:
+                  type: string
+                  nullable: true
+                  description: Optional bookId from the book data. Omit or leave empty for a General / Account Level ticket.
+                subject:
+                  type: string
+                  minLength: 3
+                  maxLength: 160
+                  example: Question about royalty payment
+                description:
+                  type: string
+                  minLength: 5
+                  maxLength: 10000
+                  example: Could you please clarify my pending royalty payment?
+                attachmentName:
+                  type: string
+                  maxLength: 255
+                  description: Optional attachment filename metadata. This field does not upload a file.
       responses:
-        "201": { description: Created }
+        "201":
+          description: Ticket created successfully
+        "400":
+          description: Invalid ticket data or selected book does not belong to the author
+        "401":
+          description: Authentication required
+
   /api/tickets/{id}:
     get:
-      summary: Get ticket
-      security: [{ bearerAuth: [] }]
+      tags:
+        - Tickets
+      summary: Get ticket by ID
+      description: Retrieve a ticket and its conversation. Authors can only access their own tickets.
+      security:
+        - bearerAuth: []
       parameters:
-        - { in: path, name: id, required: true, schema: { type: string } }
+        - $ref: "#/components/parameters/TicketId"
       responses:
-        "200": { description: Ticket }
+        "200":
+          description: Ticket retrieved successfully
+        "401":
+          description: Authentication required
+        "404":
+          description: Ticket not found
+
   /api/tickets/{id}/replies:
     post:
-      summary: Add public reply
-      security: [{ bearerAuth: [] }]
+      tags:
+        - Tickets
+      summary: Add a public reply
+      description: Add a public message to a ticket. Authors can only reply to their own tickets. A reply can reopen a resolved or closed ticket.
+      security:
+        - bearerAuth: []
       parameters:
-        - { in: path, name: id, required: true, schema: { type: string } }
+        - $ref: "#/components/parameters/TicketId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [message]
+              required:
+                - message
               properties:
-                message: { type: string }
+                message:
+                  type: string
+                  minLength: 1
+                  maxLength: 10000
+                  example: Thank you for the update.
       responses:
-        "201": { description: Reply created }
+        "201":
+          description: Reply added successfully
+        "400":
+          description: Invalid reply data
+        "401":
+          description: Authentication required
+        "404":
+          description: Ticket not found
+
   /api/admin/tickets:
     get:
-      summary: Admin ticket queue
-      security: [{ bearerAuth: [] }]
+      tags:
+        - Admin - Ticket Management
+      summary: List and filter all tickets
+      description: Retrieve the admin ticket queue, optionally filtered by status, category, and priority.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TicketStatus"
+        - $ref: "#/components/parameters/TicketCategory"
+        - $ref: "#/components/parameters/TicketPriority"
       responses:
-        "200": { description: All tickets }
+        "200":
+          description: Admin ticket queue retrieved successfully
+        "401":
+          description: Authentication required
+        "403":
+          description: Admin access required
+
   /api/admin/tickets/{id}:
     patch:
-      summary: Update ticket, assignment, internal note, classification or AI draft
-      security: [{ bearerAuth: [] }]
+      tags:
+        - Admin - Ticket Management
+      summary: Update ticket
+      description: Update ticket status, category, priority, assignment, internal notes, or AI draft. At least one supported field must be provided.
+      security:
+        - bearerAuth: []
       parameters:
-        - { in: path, name: id, required: true, schema: { type: string } }
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                status: { type: string }
-                category: { type: string }
-                priority: { type: string }
-                assignToMe: { type: boolean }
-                internalNote: { type: string }
-                aiDraft: { type: string }
-      responses:
-        "200": { description: Updated }
-  /api/admin/tickets/{id}/draft-response:
-    post:
-      summary: Generate AI response draft
-      security: [{ bearerAuth: [] }]
-      parameters:
-        - { in: path, name: id, required: true, schema: { type: string } }
-      responses:
-        "200": { description: Draft response }
-  /api/admin/tickets/{id}/send-response:
-    post:
-      summary: Send reviewed response to author
-      security: [{ bearerAuth: [] }]
-      parameters:
-        - { in: path, name: id, required: true, schema: { type: string } }
+        - $ref: "#/components/parameters/TicketId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [message]
+              minProperties: 1
               properties:
-                message: { type: string }
+                status:
+                  type: string
+                  enum:
+                    - Open
+                    - In Progress
+                    - Resolved
+                    - Closed
+                category:
+                  type: string
+                  enum:
+                    - Royalty & Payments
+                    - ISBN & Metadata Issues
+                    - Printing & Quality
+                    - Distribution & Availability
+                    - Book Status & Production Updates
+                    - General Inquiry
+                priority:
+                  type: string
+                  enum:
+                    - Critical
+                    - High
+                    - Medium
+                    - Low
+                assignToMe:
+                  type: boolean
+                  description: Assign the ticket to the currently authenticated admin when true.
+                internalNote:
+                  type: string
+                  minLength: 1
+                  maxLength: 5000
+                  description: Add an internal-only note.
+                aiDraft:
+                  type: string
+                  maxLength: 10000
+                  description: Save or edit the AI-generated response draft.
       responses:
-        "201": { description: Reply sent }
+        "200":
+          description: Ticket updated successfully
+        "400":
+          description: Invalid update data
+        "401":
+          description: Authentication required
+        "403":
+          description: Admin access required
+        "404":
+          description: Ticket not found
+
+  /api/admin/tickets/{id}/draft-response:
+    post:
+      tags:
+        - Admin - Ticket Management
+      summary: Generate AI response draft
+      description: Generate a suggested response for an admin to review and edit before sending.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TicketId"
+      responses:
+        "200":
+          description: Draft generated successfully
+        "401":
+          description: Authentication required
+        "403":
+          description: Admin access required
+        "404":
+          description: Ticket not found
+
+  /api/admin/tickets/{id}/send-response:
+    post:
+      tags:
+        - Admin - Ticket Management
+      summary: Send reviewed response to author
+      description: Send the supplied public response to the ticket author. The ticket status is set to In Progress.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/TicketId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  minLength: 1
+                  maxLength: 10000
+                  example: Thank you for contacting BookLeaf Support. We are reviewing your query.
+      responses:
+        "201":
+          description: Response sent successfully
+        "400":
+          description: Invalid response data
+        "401":
+          description: Authentication required
+        "403":
+          description: Admin access required
+        "404":
+          description: Ticket not found

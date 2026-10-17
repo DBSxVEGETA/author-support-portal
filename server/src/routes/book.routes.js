@@ -1,6 +1,8 @@
-const r = require("express").Router(),
+const router = require("express").Router(),
   auth = require("../middleware/auth"),
-  c = require("../controllers/book.controller");
-r.get("/", auth, c.listBooks);
-r.get("/:id", auth, c.getBook);
-module.exports = r;
+  bookController = require("../controllers/book.controller");
+
+router.get("/", auth, bookController.listBooks);
+router.get("/:id", auth, bookController.getBook);
+
+module.exports = router;

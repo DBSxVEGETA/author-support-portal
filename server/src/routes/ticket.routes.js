@@ -1,7 +1,12 @@
-const r = require("express").Router(),
+const router = require("express").Router(),
   auth = require("../middleware/auth"),
-  c = require("../controllers/ticket.controller");
-r.route("/").get(auth, c.listTickets).post(auth, c.createTicket);
-r.get("/:id", auth, c.getTicket);
-r.post("/:id/replies", auth, c.replyTicket);
-module.exports = r;
+  ticketController = require("../controllers/ticket.controller");
+
+router
+  .route("/")
+  .get(auth, ticketController.listTickets)
+  .post(auth, ticketController.createTicket);
+router.get("/:id", auth, ticketController.getTicket);
+router.post("/:id/replies", auth, ticketController.replyTicket);
+
+module.exports = router;

@@ -9,6 +9,7 @@ const CATS = [
 ];
 const PRIOS = ["Critical", "High", "Medium", "Low"];
 const KB = `BookLeaf support knowledge base: author receives 80% of net profit and BookLeaf 20%; net profit is MRP minus printing cost, platform commission and shipping. Royalties are calculated quarterly and paid within 45 days after quarter end; minimum payout ₹1,000, smaller balances roll over, bank transfer. Do not promise specific payment dates. BookLeaf assigns ISBN under its imprint; own imprint requires own ISBN. Duplicate/incorrect ISBN is high priority and production escalation is appropriate. Printing usually 5–7 business days after order confirmation; verified defects may qualify for free reprint, request photos/order details. Distribution: Amazon India, Flipkart, Amazon US, Amazon UK, BookLeaf Store. Listing may take 7–10 business days after publication is complete; stock sync may take 24–48 hours. Production stages: Manuscript Received, Editing (if opted), Cover Design, Typesetting, Proofreading, ISBN Assignment, Printing, Distribution Setup, Published & Live. Be empathetic; never invent account facts, payment dates, escalations or completed actions.`;
+
 function fallback(text) {
   const s = text.toLowerCase();
   let category = "General Inquiry";
@@ -32,6 +33,7 @@ function fallback(text) {
       : "Medium";
   return { category, priority };
 }
+
 async function classifyTicket({ subject, description, bookTitle }) {
   const fb = fallback(`${subject}\n${description}\n${bookTitle || ""}`);
   if (!process.env.OPENAI_API_KEY) return { ...fb, source: "fallback" };
@@ -63,10 +65,13 @@ async function classifyTicket({ subject, description, bookTitle }) {
     return { ...fb, source: "fallback" };
   }
 }
+
 async function draftResponse(ticket) {
   const fallbackText = `Hello ${ticket.author?.name || "there"},\n\nThank you for contacting BookLeaf Support about "${ticket.subject}". We understand this is important. Our team will review the details${ticket.bookTitle ? ` for "${ticket.bookTitle}"` : ""} and follow up with next steps. If available, please share any supporting details or screenshots in this ticket.\n\nRegards,\nBookLeaf Support`;
+
   if (!process.env.OPENAI_API_KEY)
     return { draft: fallbackText, source: "fallback" };
+
   try {
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const r = await client.chat.completions.create({
@@ -93,6 +98,7 @@ async function draftResponse(ticket) {
         },
       ],
     });
+
     return {
       draft: r.choices[0].message.content?.trim() || fallbackText,
       source: "ai",
@@ -102,4 +108,5 @@ async function draftResponse(ticket) {
     return { draft: fallbackText, source: "fallback" };
   }
 }
+
 module.exports = { classifyTicket, draftResponse };
