@@ -10,9 +10,9 @@
 ## Demo logins (development only)
 
 - Author: use the first author's email shown by `npm run seed`; password `Author123@`
-- Admin: `admin@bookleaf.local`; password `Admin123@` unless changed in `.env`
+- Admin: `admin@bookleaf.com`; password `Admin123@` unless changed in `.env`
 
-Use `Authorization: Bearer <token>` for protected API routes. Swagger has a bearer-token Authorize control. Never commit `.env` or expose an OpenAI key in the frontend.
+Use `Authorization: Bearer <token>` for protected API routes. Swagger has a bearer-token Authorize control. Never commit `.env` or expose an AI key in the frontend.
 
 ## Routes
 
@@ -22,4 +22,4 @@ Use `Authorization: Bearer <token>` for protected API routes. Swagger has a bear
 - `GET /api/admin/tickets`, `PATCH /api/admin/tickets/:id`
 - `POST /api/admin/tickets/:id/draft-response`, `POST /api/admin/tickets/:id/send-response`
 
-AI classification and drafts fall back to rules/templates when `OPENAI_API_KEY` is blank or the service fails. Attachments currently store filename metadata only; actual upload/storage is not implemented yet. Socket.IO sends authenticated `ticket:created` and `ticket:updated` events; frontend must connect with `io(API_URL, { auth: { token } })`.
+AI classification and drafts fall back to rules/templates when `GEMINI_API_KEY` is blank or the service fails. Attachments currently store filename metadata only; actual upload/storage is not implemented yet. Socket.IO sends authenticated `ticket:created` and `ticket:updated` events; frontend must connect with `io(API_URL, { auth: { token } })`.

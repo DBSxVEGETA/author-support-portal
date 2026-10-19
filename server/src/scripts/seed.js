@@ -64,9 +64,7 @@ const seed = async () => {
     }
   }
 
-  const email = (
-      process.env.ADMIN_EMAIL || "admin@bookleaf.local"
-    ).toLowerCase(),
+  const email = (process.env.ADMIN_EMAIL || "admin@bookleaf.com").toLowerCase(),
     password = process.env.ADMIN_PASSWORD || "Admin123@",
     adminHash = await bcrypt.hash(password, 12);
 

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 
 info:
-  title: BookLeaf Author Support Portal API
+  title: Author Support Portal API
   version: 1.0.0
   description: REST API for author authentication, book management, support tickets, and admin operations.
 
@@ -410,7 +410,7 @@ paths:
                   type: string
                   minLength: 1
                   maxLength: 10000
-                  example: Thank you for contacting BookLeaf Support. We are reviewing your query.
+                  example: Thank you for contacting Support. We are reviewing your query.
       responses:
         "201":
           description: Response sent successfully
