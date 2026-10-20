@@ -5,7 +5,7 @@ React + Vite frontend for the Author Support Portal.
 ## Setup
 
 1. Install Node.js (LTS) and MongoDB/backend prerequisites separately.
-2. Copy `.env.example` to `.env` and set `VITE_API_URL` to the backend URL (default local API: `http://localhost:5000`).
+2. Copy `.env.example` to `.env` and set `API_URL` to the backend URL (default local API: `http://localhost:5000`).
 3. Run `npm install`.
 4. Run `npm run dev`.
 5. Run `npm run build` to verify the production bundle.
