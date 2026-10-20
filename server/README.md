@@ -22,4 +22,4 @@ Use `Authorization: Bearer <token>` for protected API routes. Swagger has a bear
 - `GET /api/admin/tickets`, `PATCH /api/admin/tickets/:id`
 - `POST /api/admin/tickets/:id/draft-response`, `POST /api/admin/tickets/:id/send-response`
 
-AI classification and drafts fall back to rules/templates when `GEMINI_API_KEY` is blank or the service fails. Attachments currently store filename metadata only; actual upload/storage is not implemented yet. Socket.IO sends authenticated `ticket:created` and `ticket:updated` events; frontend must connect with `io(API_URL, { auth: { token } })`.
+AI classification and drafts fall back to rules/templates when `GEMINI_API_KEY` is blank or the service fails. Attachments currently store filename metadata only; actual upload/storage is not implemented yet. Socket.IO sends authenticated `ticket:created` and `ticket:updated` events; frontend must connect with `io(VITE_API_URL, { auth: { token } })`.

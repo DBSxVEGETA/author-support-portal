@@ -8,7 +8,7 @@ import {
   AlertCircle,
   RefreshCw,
 } from "lucide-react";
-import api, { API_URL } from "../api/axios.js";
+import api, { VITE_API_URL } from "../api/axios.js";
 import { io } from "socket.io-client";
 import { statuses, categories, priorities } from "../utils/constants.js";
 import {
@@ -37,7 +37,7 @@ function AdminInbox() {
   }, []);
   useEffect(() => {
     if (!localStorage.getItem("bl_token")) return;
-    const socket = io(API_URL, {
+    const socket = io(VITE_API_URL, {
       auth: { token: localStorage.getItem("bl_token") },
     });
     socket.on("ticket:created", load);

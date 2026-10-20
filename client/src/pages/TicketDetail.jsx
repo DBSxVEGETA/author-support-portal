@@ -50,7 +50,7 @@ function TicketDetail({ admin = false }) {
   }, [id]);
 
   useEffect(() => {
-    const socketUrl = import.meta.env.API_URL || "http://localhost:5000";
+    const socketUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
     const token = localStorage.getItem("bl_token");
 
