@@ -1,3 +1,4 @@
+import React from "react";
 function StatCard({ label, value, detail, icon: Icon, tone = "green" }) {
   return (
     <div className="stat-card">

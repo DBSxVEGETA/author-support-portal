@@ -19,6 +19,7 @@ import {
   StatusPill,
   PriorityPill,
 } from "../components/common/index.js";
+import { io } from "socket.io-client";
 
 function TicketDetail({ admin = false }) {
   const { id } = useParams(),
@@ -43,9 +44,38 @@ function TicketDetail({ admin = false }) {
         setError(e.response?.data?.message || "Could not load this ticket."),
       )
       .finally(() => setLoading(false));
+
   useEffect(() => {
     load();
   }, [id]);
+
+  useEffect(() => {
+    const socketUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+    const token = localStorage.getItem("bl_token");
+
+    const socket = io(socketUrl, {
+      auth: { token },
+      withCredentials: true,
+    });
+
+    const handleTicketUpdate = (event) => {
+      console.log("[Socket] ticket:updated received:", event);
+
+      if (event?.ticketId && String(event.ticketId) === String(id)) {
+        console.log("[Socket] Matching ticket. Reloading...");
+        load();
+      }
+    };
+
+    socket.on("ticket:updated", handleTicketUpdate);
+
+    return () => {
+      socket.off("ticket:updated", handleTicketUpdate);
+      socket.disconnect();
+    };
+  }, [id]);
+
   const send = async (e) => {
     e.preventDefault();
     if (!message.trim()) return;

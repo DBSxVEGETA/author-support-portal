@@ -156,9 +156,18 @@ exports.replyTicket = async (req, res, next) => {
     await t.save();
 
     const io = req.app.get("io");
+    // if (io) {
+    //   io.to(`user:${t.author}`).emit("ticket:updated", { ticketId: t._id });
+    //   io.to("admins").emit("ticket:updated", { ticketId: t._id });
+    // }
     if (io) {
-      io.to(`user:${t.author}`).emit("ticket:updated", { ticketId: t._id });
-      io.to("admins").emit("ticket:updated", { ticketId: t._id });
+      const event = {
+        ticketId: t._id.toString(),
+      };
+
+      io.to(`user:${t.author.toString()}`).emit("ticket:updated", event);
+
+      io.to("admins").emit("ticket:updated", event);
     }
     res.status(201).json({ success: true, ticket: safe(t, req.user) });
   } catch (e) {
@@ -205,9 +214,18 @@ exports.adminUpdateTicket = async (req, res, next) => {
     await t.save();
 
     const io = req.app.get("io");
+    // if (io) {
+    //   io.to(`user:${t.author}`).emit("ticket:updated", { ticketId: t._id });
+    //   io.to("admins").emit("ticket:updated", { ticketId: t._id });
+    // }
     if (io) {
-      io.to(`user:${t.author}`).emit("ticket:updated", { ticketId: t._id });
-      io.to("admins").emit("ticket:updated", { ticketId: t._id });
+      const event = {
+        ticketId: t._id.toString(),
+      };
+
+      io.to(`user:${t.author.toString()}`).emit("ticket:updated", event);
+
+      io.to("admins").emit("ticket:updated", event);
     }
     res.json({ success: true, ticket: safe(t, req.user) });
   } catch (e) {
@@ -263,9 +281,19 @@ exports.sendDraft = async (req, res, next) => {
     t.status = "In Progress";
     t.lastActivityAt = new Date();
     await t.save();
+    // const io = req.app.get("io");
+    // if (io)
+    //   io.to(`user:${t.author}`).emit("ticket:updated", { ticketId: t._id });
     const io = req.app.get("io");
-    if (io)
-      io.to(`user:${t.author}`).emit("ticket:updated", { ticketId: t._id });
+
+    if (io) {
+      const event = {
+        ticketId: t._id.toString(),
+      };
+
+      io.to(`user:${t.author.toString()}`).emit("ticket:updated", event);
+      io.to("admins").emit("ticket:updated", event);
+    }
     res.status(201).json({ success: true, ticket: safe(t, req.user) });
   } catch (e) {
     next(e);
