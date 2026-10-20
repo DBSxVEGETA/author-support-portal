@@ -40,11 +40,7 @@ async function start() {
 
   app.set("io", io);
   const port = process.env.PORT || 5000;
-  server.listen(port, () =>
-    console.log(
-      `Portal API: http://localhost:${port} | Swagger: http://localhost:${port}/api-docs`,
-    ),
-  );
+  server.listen(port, () => console.log(`Portal API running on port ${port}`));
 }
 
 start().catch((e) => {
